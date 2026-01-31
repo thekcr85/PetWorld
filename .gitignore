@@ -1,0 +1,48 @@
+## .NET Build Outputs
+bin/
+obj/
+out/
+
+## User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+## Visual Studio
+.vs/
+.vscode/
+
+## Rider
+.idea/
+
+## Environment Variables (CRITICAL - Contains API Keys)
+.env
+
+## Database
+*.db
+*.db-shm
+*.db-wal
+
+## Logs
+logs/
+*.log
+
+## OS Files
+.DS_Store
+Thumbs.db
+
+## NuGet
+*.nupkg
+*.snupkg
+packages/
+project.lock.json
+project.fragment.lock.json
+
+## Docker
+docker-compose.override.yml
+
+## Temporary Files
+*.tmp
+*.temp
+*~

@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PetWorld.Application\PetWorld.Application.csproj" />
+    <ProjectReference Include="..\PetWorld.Domain\PetWorld.Domain.csproj" />
+    <ProjectReference Include="..\PetWorld.Infrastructure\PetWorld.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

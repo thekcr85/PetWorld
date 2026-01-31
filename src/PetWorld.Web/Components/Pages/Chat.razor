@@ -1,0 +1,76 @@
+@page "/chat"
+@using PetWorld.Application.DTOs
+@using PetWorld.Application.Services
+@inject IChatService ChatService
+@rendermode InteractiveServer
+
+<PageTitle>Chat</PageTitle>
+
+<h1>Chat z klientem</h1>
+
+<div class="chat-container">
+    <div class="mb-3">
+        <label for="question" class="form-label">Pytanie klienta:</label>
+        <textarea @bind="question" class="form-control" id="question" rows="3" placeholder="Wpisz pytanie..."></textarea>
+    </div>
+
+    <button @onclick="SendQuestion" class="btn btn-primary" disabled="@isLoading">
+        @if (isLoading)
+        {
+            <span class="spinner-border spinner-border-sm me-2"></span>
+        }
+        Wyœlij
+    </button>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger mt-3">@errorMessage</div>
+    }
+
+    @if (response != null)
+    {
+        <div class="mt-4">
+            <h3>OdpowiedŸ:</h3>
+            <div class="card">
+                <div class="card-body">
+                    <p class="card-text">@response.Answer</p>
+                    <p class="text-muted"><small>Liczba iteracji: @response.IterationCount</small></p>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private string question = string.Empty;
+    private ChatResponseDto? response;
+    private bool isLoading;
+    private string errorMessage = string.Empty;
+
+    private async Task SendQuestion()
+    {
+        if (string.IsNullOrWhiteSpace(question))
+        {
+            errorMessage = "Proszê wpisaæ pytanie.";
+            return;
+        }
+
+        try
+        {
+            isLoading = true;
+            errorMessage = string.Empty;
+            response = null;
+
+            var request = new ChatRequestDto { Question = question };
+            response = await ChatService.ProcessQuestionAsync(request);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"B³¹d: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

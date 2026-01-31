@@ -1,0 +1,59 @@
+@page "/history"
+@using PetWorld.Application.DTOs
+@using PetWorld.Application.Services
+@inject IChatService ChatService
+@rendermode InteractiveServer
+
+<PageTitle>Historia</PageTitle>
+
+<h1>Historia rozmów</h1>
+
+@if (isLoading)
+{
+    <p><em>£adowanie...</em></p>
+}
+else if (history == null || !history.Any())
+{
+    <p>Brak historii rozmów.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>Pytanie</th>
+                <th>OdpowiedŸ</th>
+                <th>Liczba iteracji</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in history)
+            {
+                <tr>
+                    <td>@item.Date.ToString("dd.MM.yyyy HH:mm")</td>
+                    <td>@item.Question</td>
+                    <td>@item.Answer</td>
+                    <td>@item.IterationCount</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private IEnumerable<ChatHistoryDto>? history;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            history = await ChatService.GetHistoryAsync();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}
