@@ -1,131 +1,202 @@
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Text.Json;
+﻿using Microsoft.Agents.AI;
 using Microsoft.Extensions.Configuration;
+using OpenAI;
+using OpenAI.Chat;
 using PetWorld.Domain.Entities;
 using PetWorld.Domain.Interfaces.Services;
+using System.Text;
+using System.Text.Json;
 
 namespace PetWorld.Infrastructure.Services;
 
 /// <summary>
-/// Simple Writer-Critic AI implementation using OpenAI HTTP API.
-/// Expects OpenAI API key in configuration: OpenAI:ApiKey and optional OpenAI:ModelName.
+/// AI Chat Service using Microsoft Agent Framework.
+/// Implements Writer-Critic pattern: Writer generates → Critic evaluates → Iterate (max 3x).
 /// </summary>
 public sealed class AiChatService : IAiChatService
 {
-    private readonly string _apiKey;
-    private readonly string _model;
-    private readonly HttpClient _httpClient;
-    private const int MaxIterations = 3;
+	private readonly AIAgent _writerAgent;
+	private readonly AIAgent _criticAgent;
+	private const int MaxIterations = 3;
 
-    public AiChatService(IConfiguration configuration)
-    {
-        _apiKey = configuration["OpenAI:ApiKey"] ?? string.Empty;
-        _model = configuration["OpenAI:ModelName"] ?? "gpt-4o";
+	public AiChatService(IConfiguration configuration)
+	{
+		var apiKey = configuration["OpenAI:ApiKey"]
+			?? throw new InvalidOperationException("OpenAI API Key not configured in appsettings.json");
+		var modelName = configuration["OpenAI:ModelName"] ?? "gpt-4o-mini";
 
-        if (string.IsNullOrWhiteSpace(_apiKey))
-            throw new InvalidOperationException("OpenAI:ApiKey not configured. Set it in .env or appsettings.json");
+		// Create OpenAI client
+		var openAiClient = new OpenAIClient(apiKey);
+		var chatClient = openAiClient.GetChatClient(modelName);
 
-        _httpClient = new HttpClient();
-        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
-        _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-    }
+		// Writer Agent - generates customer-facing responses with product recommendations
+		_writerAgent = chatClient.AsAIAgent(
+			name: "ProductWriter",
+			instructions: """
+                Jesteś ekspertem PetWorld - sklepu ze zwierzętami.
+                Pomagasz klientom wybierać produkty dla ich pupili.
+                
+                ZASADY:
+                - Odpowiadaj ZAWSZE po polsku
+                - Bądź profesjonalny i pomocny
+                - ZAWSZE polecaj konkretne produkty z nazwą i ceną
+                - Jeśli klient pyta o konkretną kategorię, polecaj produkty z tej kategorii
+                - Uzasadnij swoje rekomendacje
+                """);
 
-    public async Task<(string Answer, int IterationCount)> GetAnswerAsync(string question, IEnumerable<Product> products)
-    {
-        var productsText = FormatProducts(products);
-        string answer = string.Empty;
+		// Critic Agent - evaluates response quality and gives feedback
+		_criticAgent = chatClient.AsAIAgent(
+			name: "ResponseCritic",
+			instructions: """
+                Jesteś krytycznym recenzentem odpowiedzi eksperta PetWorld.
+                
+                OCEŃ ODPOWIEDŹ według kryteriów:
+                1. Czy zawiera konkretne produkty z nazwami i cenami?
+                2. Czy odpowiada na pytanie klienta?
+                3. Czy jest profesjonalna i pomocna?
+                4. Czy rekomendacje są uzasadnione?
+                
+                ZWRÓĆ TYLKO I WYŁĄCZNIE JSON w formacie:
+                {
+                  "approved": true,
+                  "feedback": ""
+                }
+                
+                LUB jeśli odpowiedź nie spełnia kryteriów:
+                {
+                  "approved": false,
+                  "feedback": "konkretne uwagi do poprawy"
+                }
+                
+                NIE dodawaj żadnego tekstu poza JSON!
+                """);
+	}
 
-        for (int iteration = 1; iteration <= MaxIterations; iteration++)
-        {
-            answer = await WriterGenerateAsync(question, productsText, answer, iteration);
-            var (approved, _) = await CriticEvaluateAsync(question, answer);
-            if (approved)
-                return (answer, iteration);
-        }
+	public async Task<(string Answer, int IterationCount)> GetAnswerAsync(
+		string question,
+		IEnumerable<Product> products)
+	{
+		var productList = FormatProducts(products);
+		var answer = string.Empty;
+		var criticFeedback = string.Empty;
 
-        return (answer, MaxIterations);
-    }
+		// Writer-Critic loop (max 3 iterations)
+		for (int iteration = 1; iteration <= MaxIterations; iteration++)
+		{
+			// Step 1: Writer generates or improves answer
+			answer = await GenerateAnswerAsync(question, productList, criticFeedback);
 
-    private async Task<string> WriterGenerateAsync(string question, string productsText, string previousAnswer, int iteration)
-    {
-        var systemPrompt = "Jeste� ekspertem PetWorld. Pomagasz klientom wybiera� produkty dla zwierz�t. Odpowiadaj po polsku, profesjonalnie, polecaj konkretne produkty z cenami.";
+			// Step 2: Critic evaluates the answer
+			var (isApproved, feedback) = await EvaluateAnswerAsync(question, answer);
 
-        var messages = new List<object>
-        {
-            new { role = "system", content = systemPrompt },
-            new { role = "system", content = $"Dost�pne produkty:\n{productsText}" }
-        };
+			// Step 3: If approved, return immediately with iteration count
+			if (isApproved)
+			{
+				return (answer, iteration);
+			}
 
-        if (iteration > 1 && !string.IsNullOrEmpty(previousAnswer))
-        {
-            messages.Add(new { role = "system", content = "Popraw swoj� poprzedni� odpowied�:" });
-            messages.Add(new { role = "assistant", content = previousAnswer });
-        }
+			// Store feedback for next iteration
+			criticFeedback = feedback;
+		}
 
-        messages.Add(new { role = "user", content = question });
+		// Max iterations reached - return last answer
+		return (answer, MaxIterations);
+	}
 
-        var payload = new
-        {
-            model = _model,
-            messages = messages,
-            temperature = 0.2
-        };
+	/// <summary>
+	/// Writer Agent generates or improves answer based on critic feedback.
+	/// </summary>
+	private async Task<string> GenerateAnswerAsync(
+		string question,
+		string productList,
+		string? criticFeedback)
+	{
+		var prompt = new StringBuilder();
+		prompt.AppendLine("=== DOSTĘPNE PRODUKTY ===");
+		prompt.AppendLine(productList);
+		prompt.AppendLine();
+		prompt.AppendLine("=== PYTANIE KLIENTA ===");
+		prompt.AppendLine(question);
 
-        var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
-        using var resp = await _httpClient.PostAsync("https://api.openai.com/v1/chat/completions", content);
-        var body = await resp.Content.ReadAsStringAsync();
-        if (!resp.IsSuccessStatusCode)
-            throw new InvalidOperationException($"OpenAI request failed: {resp.StatusCode} {body}");
+		// If this is iteration 2 or 3, include critic's feedback
+		if (!string.IsNullOrEmpty(criticFeedback))
+		{
+			prompt.AppendLine();
+			prompt.AppendLine("=== UWAGI DO POPRAWY ===");
+			prompt.AppendLine(criticFeedback);
+			prompt.AppendLine();
+			prompt.AppendLine("Popraw swoją poprzednią odpowiedź uwzględniając powyższe uwagi.");
+		}
 
-        using var doc = JsonDocument.Parse(body);
-        var text = doc.RootElement.GetProperty("choices")[0].GetProperty("message").GetProperty("content").GetString() ?? string.Empty;
-        return text.Trim();
-    }
+		// Call Writer Agent using Microsoft Agent Framework
+		var response = await _writerAgent.RunAsync(prompt.ToString());
+		return response.Text.Trim();
+	}
 
-    private async Task<(bool Approved, string Feedback)> CriticEvaluateAsync(string question, string answer)
-    {
-        var systemPrompt = "Oce� odpowied�: poprawna, profesjonalna, z produktami. Zwr�� JSON: {\"approved\": true/false, \"feedback\": \"...\"}";
-        var messages = new List<object>
-        {
-            new { role = "system", content = systemPrompt },
-            new { role = "user", content = $"Pytanie: {question}\n\nOdpowied�: {answer}" }
-        };
+	/// <summary>
+	/// Critic Agent evaluates answer quality.
+	/// </summary>
+	private async Task<(bool IsApproved, string Feedback)> EvaluateAnswerAsync(
+		string question,
+		string answer)
+	{
+		var evaluationPrompt = $"""
+            === PYTANIE KLIENTA ===
+            {question}
+            
+            === ODPOWIEDŹ DO OCENY ===
+            {answer}
+            
+            Oceń powyższą odpowiedź i zwróć JSON.
+            """;
 
-        var payload = new { model = _model, messages = messages, temperature = 0 };
-        var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
-        using var resp = await _httpClient.PostAsync("https://api.openai.com/v1/chat/completions", content);
-        var body = await resp.Content.ReadAsStringAsync();
-        if (!resp.IsSuccessStatusCode)
-            return (true, string.Empty); // fail-open
+		// Call Critic Agent using Microsoft Agent Framework
+		var response = await _criticAgent.RunAsync(evaluationPrompt);
+		return ParseCriticResponse(response.Text);
+	}
 
-        try
-        {
-            using var doc = JsonDocument.Parse(body);
-            var criticText = doc.RootElement.GetProperty("choices")[0].GetProperty("message").GetProperty("content").GetString() ?? string.Empty;
-            var evaluation = JsonSerializer.Deserialize<CriticResult>(criticText.Trim(), new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-            if (evaluation is null)
-                return (true, string.Empty);
-            return (evaluation.Approved, evaluation.Feedback ?? string.Empty);
-        }
-        catch
-        {
-            return (true, string.Empty);
-        }
-    }
+	/// <summary>
+	/// Parses Critic's JSON response to extract approval status and feedback.
+	/// </summary>
+	private static (bool IsApproved, string Feedback) ParseCriticResponse(string responseText)
+	{
+		try
+		{
+			// Remove markdown code blocks if AI wraps JSON in ```json ... ```
+			var cleanJson = responseText
+				.Replace("```json", "")
+				.Replace("```", "")
+				.Trim();
 
-    private static string FormatProducts(IEnumerable<Product> products)
-    {
-        var sb = new StringBuilder();
-        foreach (var p in products)
-            sb.AppendLine($"- {p.Name} ({p.Category}) - {p.Price} z� - {p.Description}");
-        return sb.ToString();
-    }
+			var result = JsonSerializer.Deserialize<CriticEvaluation>(
+				cleanJson,
+				new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-    private sealed class CriticResult
-    {
-        public bool Approved { get; set; }
-        public string Feedback { get; set; } = string.Empty;
-    }
+			return (result?.Approved ?? true, result?.Feedback ?? string.Empty);
+		}
+		catch (JsonException)
+		{
+			// If JSON parsing fails, approve by default (fail-safe)
+			// This prevents the system from getting stuck
+			return (true, string.Empty);
+		}
+	}
+
+	/// <summary>
+	/// Formats product list for AI prompt.
+	/// </summary>
+	private static string FormatProducts(IEnumerable<Product> products)
+	{
+		return string.Join("\n", products.Select(p =>
+			$"• {p.Name} ({p.Category}) - {p.Price} zł - {p.Description}"));
+	}
+
+	/// <summary>
+	/// Critic's evaluation response model.
+	/// </summary>
+	private sealed class CriticEvaluation
+	{
+		public bool Approved { get; set; }
+		public string Feedback { get; set; } = string.Empty;
+	}
 }
