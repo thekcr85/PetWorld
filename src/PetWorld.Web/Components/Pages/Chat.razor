@@ -55,12 +55,12 @@
             return;
         }
 
+        isLoading = true;
+        errorMessage = string.Empty;
+        response = null;
+
         try
         {
-            isLoading = true;
-            errorMessage = string.Empty;
-            response = null;
-
             var request = new ChatRequestDto { Question = question };
             response = await ChatService.ProcessQuestionAsync(request);
         }
