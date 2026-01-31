@@ -2,7 +2,7 @@
 
 > AI-powered pet shop assistant using Writer-Critic pattern with OpenAI GPT-4o
 
-[![.NET](https://img.shields.io/badge/.NET-10.0-512BD4)](https://dotnet.microsoft.com/)
+[![.NET](https://img.shields.io/badge/.NET-9.0-512BD4)](https://dotnet.microsoft.com/)
 [![Blazor](https://img.shields.io/badge/Blazor-Server-512BD4)](https://blazor.net/)
 [![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1)](https://www.mysql.com/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED)](https://www.docker.com/)
@@ -19,10 +19,10 @@ A Blazor Server chatbot that recommends pet products using AI quality assurance:
 ## Tech Stack
 
 ```
-.NET 10 + C# 14
+.NET 9 + C# 13
 Blazor Server (Interactive)
 OpenAI GPT-4o (Microsoft Agents AI)
-Entity Framework Core 10 + MySQL 8
+Entity Framework Core 9 + MySQL 8
 Docker + Docker Compose
 Clean Architecture
 ```
@@ -126,7 +126,7 @@ User asks: "Jaka karma dla psa?"
 
 | Route | Description |
 |-------|-------------|
-| `/` | Home page with project info |
+| `/` | Redirects to Chat |
 | `/chat` | AI chat interface |
 | `/history` | Conversation history table |
 
@@ -154,14 +154,17 @@ OPENAI_API_KEY=sk-your-actual-api-key-here
 
 ## NuGet Packages
 
+### PetWorld.Infrastructure
+
 ```xml
-<!-- Infrastructure -->
-<PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.2" />
-<PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="10.0.0" />
-<PackageReference Include="Azure.AI.OpenAI" Version="2.1.0" />
-<PackageReference Include="OpenAI" Version="2.1.0" />
 <PackageReference Include="Microsoft.Agents.AI.OpenAI" Version="1.0.0-preview.260128.1" />
+<PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
+<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.0" />
+<PackageReference Include="OpenAI" Version="2.8.0" />
+<PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="9.0.0" />
 ```
+
+**All packages are production-ready and compatible with .NET 9!**
 
 ## Docker Commands
 
@@ -176,7 +179,7 @@ docker compose up -d
 docker compose logs -f web
 
 # Stop & remove
-docker compose down
+docker compose down -v
 
 # Rebuild
 docker compose build --no-cache
@@ -195,8 +198,51 @@ Try these in the chat (Polish):
 ## Development Commands
 
 ```bash
-# Build
+# Build solution
 dotnet build
+
+# Restore packages
+dotnet restore
+
+# Run locally
+cd src/PetWorld.Web
+dotnet run
+
+# Clean build artifacts
+dotnet clean
+```
+
+## Architecture Highlights
+
+✅ **Clean Architecture** - testable, maintainable  
+✅ **Writer-Critic Pattern** - AI quality assurance  
+✅ **Blazor Server** - real-time interactive UI  
+✅ **EF Core 9** - modern ORM with MySQL  
+✅ **Microsoft Agents AI** - structured AI workflows  
+✅ **Docker** - one-command deployment  
+
+## Author
+
+**Michał Bąkiewicz**
+
+Recruitment task demonstrating:
+- Clean Architecture
+- AI integration (Writer-Critic pattern)  
+- Blazor Server interactive components
+- Docker containerization
+- Entity Framework Core 9 with MySQL
+
+**GitHub**: [thekcr85/PetWorld](https://github.com/thekcr85/PetWorld)
+
+---
+
+## License
+
+MIT License - Recruitment demonstration project
+
+---
+
+**Get Started:** `docker compose up` 🚀
 
 # Restore packages
 dotnet restore
