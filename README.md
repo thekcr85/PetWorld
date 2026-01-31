@@ -1,137 +1,239 @@
-﻿# PetWorld - AI-Powered Pet Shop Assistant
+﻿# PetWorld 🐾
 
-**Clean Architecture + Blazor Server + Writer-Critic AI**
+> AI-powered pet shop assistant using Writer-Critic pattern with OpenAI GPT-4o
 
-Professional pet shop chatbot demonstrating modern .NET architecture.
+[![.NET](https://img.shields.io/badge/.NET-10.0-512BD4)](https://dotnet.microsoft.com/)
+[![Blazor](https://img.shields.io/badge/Blazor-Server-512BD4)](https://blazor.net/)
+[![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1)](https://www.mysql.com/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED)](https://www.docker.com/)
 
----
+## What This Does
 
-## Overview
+A Blazor Server chatbot that recommends pet products using AI quality assurance:
 
-AI-powered chat interface for pet product recommendations using Writer-Critic pattern:
-- Writer Agent generates responses
-- Critic Agent evaluates quality
-- Max 3 iterations for optimal answers
+- 🤖 **Writer Agent** generates product recommendations
+- 🔍 **Critic Agent** evaluates quality (iterates up to 3x)
+- 💬 Chat interface in Polish
+- 📊 Conversation history stored in MySQL
 
-**Live Demo**: http://localhost:5000 (after deployment)
+## Tech Stack
 
----
-
-## Technologies
-
-| Component | Technology | Version |
-|-----------|-----------|---------|
-| Framework | .NET | 10.0 |
-| UI | Blazor Server | - |
-| Database | MySQL | 8.0 |
-| ORM | Entity Framework Core | 9.0 |
-| AI | OpenAI API | GPT-4o |
-| Container | Docker | - |
-
----
+```
+.NET 10 + C# 14
+Blazor Server (Interactive)
+OpenAI GPT-4o (Microsoft Agents AI)
+Entity Framework Core 10 + MySQL 8
+Docker + Docker Compose
+Clean Architecture
+```
 
 ## Quick Start
 
 ### Prerequisites
-- Docker Desktop
-- OpenAI API Key (https://platform.openai.com/)
 
-### Steps
+- [Docker Desktop](https://www.docker.com/products/docker-desktop)
+- [OpenAI API Key](https://platform.openai.com/api-keys)
 
-1. **Clone repository**
+### Run with Docker
+
 ```bash
-git clone https://github.com/YOUR_USERNAME/PetWorld.git
+# 1. Clone
+git clone https://github.com/thekcr85/PetWorld.git
 cd PetWorld
-```
 
-2. **Configure API key**
-```bash
-# Create .env file
-OPENAI_API_KEY=sk-your-actual-key-here
-```
+# 2. Create .env file with your API key
+echo OPENAI_API_KEY=sk-your-key-here > .env
 
-3. **Run application**
-```bash
+# 3. Start
 docker compose up
+
+# 4. Open browser
+# → http://localhost:5000
 ```
 
-4. **Access**
-- Open: http://localhost:5000
-- Chat page: Ask questions in Polish
-- History page: View all conversations
+That's it! The app will:
+- Start MySQL database
+- Run migrations automatically
+- Seed sample products
+- Launch Blazor app on port 5000
 
----
+## Local Development
 
-## Project Structure
+Without Docker:
 
-```
-PetWorld/
-├── src/
-│   ├── PetWorld.Domain/           # Core entities
-│   ├── PetWorld.Application/      # Business logic
-│   ├── PetWorld.Infrastructure/   # Data + AI
-│   └── PetWorld.Web/              # Blazor UI
-├── Dockerfile
-├── docker-compose.yml
-└── README.md
-```
-
-**Architecture**: Clean/Onion (Dependencies point inward)
-
----
-
-## Features
-
-### Chat Interface
-- Text input for customer questions
-- AI responses with product recommendations
-- Iteration count display (1-3)
-- Polish language support
-
-### History View
-- Table with all conversations
-- Columns: Date, Question, Answer, Iterations
-- MySQL persistence
-
----
-
-## Development
-
-### Build
 ```bash
-dotnet build
-```
+# 1. Start MySQL
+docker run -d -p 3306:3306 \
+  -e MYSQL_ROOT_PASSWORD=petworld123 \
+  -e MYSQL_DATABASE=petworld \
+  mysql:8.0
 
-### Run Locally
-```bash
+# 2. Update src/PetWorld.Web/appsettings.json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=localhost;Database=petworld;User=root;Password=petworld123;"
+  },
+  "OpenAI": {
+    "ApiKey": "sk-your-key-here",
+    "ModelName": "gpt-4o"
+  }
+}
+
+# 3. Run
 cd src/PetWorld.Web
 dotnet run
 ```
 
-### Docker Commands
-```bash
-docker compose build        # Build images
-docker compose up -d        # Start in background
-docker compose logs -f web  # View logs
-docker compose down -v      # Stop and remove
+## Project Structure
+
+```
+src/
+├── PetWorld.Domain/              # 🎯 Core (Entities, Interfaces)
+├── PetWorld.Application/         # 💼 Business Logic
+├── PetWorld.Infrastructure/      # 🔧 Data + AI Services
+└── PetWorld.Web/                 # 🎨 Blazor UI
+    └── Components/Pages/
+        ├── Home.razor           # Landing page
+        ├── Chat.razor           # AI chat interface
+        └── History.razor        # Conversation log
 ```
 
----
+**Clean Architecture** - dependencies flow inward (Web → Infra → App → Domain)
+
+## How Writer-Critic Works
+
+```
+User asks: "Jaka karma dla psa?"
+
+┌─────────────────────────────────────┐
+│ Iteration 1                         │
+├─────────────────────────────────────┤
+│ Writer: "Polecam karmę X i Y"      │
+│ Critic: ❌ "Brak cen"               │
+└─────────────────────────────────────┘
+         ↓
+┌─────────────────────────────────────┐
+│ Iteration 2                         │
+├─────────────────────────────────────┤
+│ Writer: "Karma X (50zł), Y (80zł)"  │
+│ Critic: ✅ "Approved"                │
+└─────────────────────────────────────┘
+         ↓
+    Final Answer (2 iterations)
+```
+
+## Pages
+
+| Route | Description |
+|-------|-------------|
+| `/` | Home page with project info |
+| `/chat` | AI chat interface |
+| `/history` | Conversation history table |
+
+## Configuration
+
+### Environment Variables (.env)
+
+```bash
+OPENAI_API_KEY=sk-your-actual-api-key-here
+```
+
+### appsettings.json
+
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=mysql;Database=petworld;User=root;Password=petworld123;"
+  },
+  "OpenAI": {
+    "ApiKey": "YOUR_OPENAI_API_KEY",
+    "ModelName": "gpt-4o"
+  }
+}
+```
+
+## NuGet Packages
+
+```xml
+<!-- Infrastructure -->
+<PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.2" />
+<PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="10.0.0" />
+<PackageReference Include="Azure.AI.OpenAI" Version="2.1.0" />
+<PackageReference Include="OpenAI" Version="2.1.0" />
+<PackageReference Include="Microsoft.Agents.AI.OpenAI" Version="1.0.0-preview.260128.1" />
+```
+
+## Docker Commands
+
+```bash
+# Start services
+docker compose up
+
+# Run in background
+docker compose up -d
+
+# View logs
+docker compose logs -f web
+
+# Stop & remove
+docker compose down
+
+# Rebuild
+docker compose build --no-cache
+```
+
+## Sample Questions
+
+Try these in the chat (Polish):
+
+```
+"Jaka karma dla psa jest najlepsza?"
+"Potrzebuję akcesoriów dla kota"
+"Co polecasz dla chomika?"
+```
+
+## Development Commands
+
+```bash
+# Build
+dotnet build
+
+# Restore packages
+dotnet restore
+
+# Run tests (when added)
+dotnet test
+
+# EF Core migrations
+cd src/PetWorld.Infrastructure
+dotnet ef migrations add MigrationName
+dotnet ef database update
+```
+
+## Architecture Highlights
+
+✅ **Clean Architecture** - testable, maintainable
+✅ **Writer-Critic Pattern** - AI quality assurance
+✅ **Blazor Server** - real-time interactive UI
+✅ **EF Core 10** - modern ORM with MySQL
+✅ **Microsoft Agents AI** - structured AI workflows
+✅ **Docker** - one-command deployment
 
 ## Author
 
 **Michał Bąkiewicz**
 
-- **Technologies**: .NET 10, Blazor Server, Clean Architecture, OpenAI, Docker, MySQL
-- **Pattern**: Writer-Critic AI (max 3 iterations)
-- **Repository**: Recruitment Task Demonstration
-
----
+Recruitment task demonstrating modern .NET 10 practices:
+- Clean Architecture
+- AI integration (Writer-Critic pattern)  
+- Blazor Server interactive components
+- Docker containerization
+- Entity Framework Core 10
 
 ## License
 
-Recruitment task demonstration project.
+MIT License - Recruitment demonstration project
 
 ---
 
-**Ready to run**: `docker compose up`
+**Get Started:** `docker compose up` 🚀
