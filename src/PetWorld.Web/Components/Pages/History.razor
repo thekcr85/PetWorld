@@ -1,4 +1,4 @@
-@page "/history"
+Ôªø@page "/history"
 @using PetWorld.Application.DTOs
 @using PetWorld.Application.Services
 @inject IChatService ChatService
@@ -6,15 +6,15 @@
 
 <PageTitle>Historia</PageTitle>
 
-<h1>Historia rozmÛw</h1>
+<h1>Historia rozm√≥w</h1>
 
 @if (isLoading)
 {
-    <p><em>£adowanie...</em></p>
+    <p><em>≈Åadowanie...</em></p>
 }
 else if (history == null || !history.Any())
 {
-    <p>Brak historii rozmÛw.</p>
+    <p>Brak historii rozm√≥w.</p>
 }
 else
 {
@@ -23,7 +23,7 @@ else
             <tr>
                 <th>Data</th>
                 <th>Pytanie</th>
-                <th>Odpowiedü</th>
+                <th>Odpowied≈∫</th>
                 <th>Liczba iteracji</th>
             </tr>
         </thead>

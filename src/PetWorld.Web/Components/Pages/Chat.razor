@@ -1,4 +1,4 @@
-@page "/chat"
+ï»¿@page "/chat"
 @using PetWorld.Application.DTOs
 @using PetWorld.Application.Services
 @inject IChatService ChatService
@@ -19,7 +19,7 @@
         {
             <span class="spinner-border spinner-border-sm me-2"></span>
         }
-        Wyœlij
+        WyÅ›lij
     </button>
 
     @if (!string.IsNullOrEmpty(errorMessage))
@@ -30,7 +30,7 @@
     @if (response != null)
     {
         <div class="mt-4">
-            <h3>OdpowiedŸ:</h3>
+            <h3>OdpowiedÅº:</h3>
             <div class="card">
                 <div class="card-body">
                     <p class="card-text">@response.Answer</p>
@@ -51,7 +51,7 @@
     {
         if (string.IsNullOrWhiteSpace(question))
         {
-            errorMessage = "Proszê wpisaæ pytanie.";
+            errorMessage = "ProszÄ™ wpisaÄ‡ pytanie.";
             return;
         }
 
@@ -66,7 +66,7 @@
         }
         catch (Exception ex)
         {
-            errorMessage = $"B³¹d: {ex.Message}";
+            errorMessage = $"BÅ‚Ä…d: {ex.Message}";
         }
         finally
         {
