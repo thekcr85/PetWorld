@@ -188,7 +188,7 @@ public sealed class AiChatService : IAiChatService
 	private static string FormatProducts(IEnumerable<Product> products)
 	{
 		return string.Join("\n", products.Select(p =>
-			$"• {p.Name} ({p.Category}) - {p.Price} zł - {p.Description}"));
+			$"• {p.Name} ({p.Category}) - {p.Price:0.##} zł - {p.Description}"));
 	}
 
 	/// <summary>
