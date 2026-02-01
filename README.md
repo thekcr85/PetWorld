@@ -223,16 +223,16 @@ dotnet clean
 
 ## Author
 
-**Michał Bąkiewicz**
+**Michał Bąkiewicz** • [GitHub](https://github.com/thekcr85)
 
 Recruitment task demonstrating:
-- Clean Architecture
-- AI integration (Writer-Critic pattern)  
-- Blazor Server interactive components
-- Docker containerization
-- Entity Framework Core 9 with MySQL
+- **Clean Architecture** with proper layer separation
+- **AI Integration** using Writer-Critic pattern with Microsoft Agents AI
+- **Blazor Server** with interactive components (.NET 9)
+- **Docker containerization** for one-command deployment
+- **Entity Framework Core 9** with MySQL (Pomelo 9.0.0 provider)
 
-**GitHub**: [thekcr85/PetWorld](https://github.com/thekcr85/PetWorld)
+**Project Repository**: [github.com/thekcr85/PetWorld](https://github.com/thekcr85/PetWorld)
 
 ---
 
@@ -244,42 +244,3 @@ MIT License - Recruitment demonstration project
 
 **Get Started:** `docker compose up` 🚀
 
-# Restore packages
-dotnet restore
-
-# Run tests (when added)
-dotnet test
-
-# EF Core migrations
-cd src/PetWorld.Infrastructure
-dotnet ef migrations add MigrationName
-dotnet ef database update
-```
-
-## Architecture Highlights
-
-✅ **Clean Architecture** - testable, maintainable
-✅ **Writer-Critic Pattern** - AI quality assurance
-✅ **Blazor Server** - real-time interactive UI
-✅ **EF Core 10** - modern ORM with MySQL
-✅ **Microsoft Agents AI** - structured AI workflows
-✅ **Docker** - one-command deployment
-
-## Author
-
-**Michał Bąkiewicz**
-
-Recruitment task demonstrating modern .NET 10 practices:
-- Clean Architecture
-- AI integration (Writer-Critic pattern)  
-- Blazor Server interactive components
-- Docker containerization
-- Entity Framework Core 10
-
-## License
-
-MIT License - Recruitment demonstration project
-
----
-
-**Get Started:** `docker compose up` 🚀
