@@ -9,33 +9,22 @@ namespace PetWorld.Application.Services;
 /// Chat service implementation.
 /// Orchestrates repositories and AI service (Dependency Inversion).
 /// </summary>
-public sealed class ChatService : IChatService
+/// <param name="productRepository">Repository for product data access</param>
+/// <param name="chatHistoryRepository">Repository for chat history data access</param>
+/// <param name="aiChatService">AI service implementing Writer-Critic pattern</param>
+public sealed class ChatService(
+	IProductRepository productRepository,
+	IChatHistoryRepository chatHistoryRepository,
+	IAiChatService aiChatService) : IChatService
 {
-	private readonly IProductRepository _productRepository;
-	private readonly IChatHistoryRepository _chatHistoryRepository;
-	private readonly IAiChatService _aiChatService;
-
-	/// <summary>
-	/// Constructor - dependencies injected by DI container.
-	/// </summary>
-	public ChatService(
-		IProductRepository productRepository,
-		IChatHistoryRepository chatHistoryRepository,
-		IAiChatService aiChatService)
-	{
-		_productRepository = productRepository;
-		_chatHistoryRepository = chatHistoryRepository;
-		_aiChatService = aiChatService;
-	}
-
 	/// <inheritdoc />
 	public async Task<ChatResponseDto> ProcessQuestionAsync(ChatRequestDto request)
 	{
 		// 1. Get all products (for AI recommendations)
-		var products = await _productRepository.GetAllAsync();
+		var products = await productRepository.GetAllAsync();
 
 		// 2. Process with Writer-Critic AI
-		var (answer, iterationCount) = await _aiChatService.GetAnswerAsync(
+		var (answer, iterationCount) = await aiChatService.GetAnswerAsync(
 			request.Question,
 			products);
 
@@ -48,7 +37,7 @@ public sealed class ChatService : IChatService
 			CreatedAt = DateTime.UtcNow
 		};
 
-		await _chatHistoryRepository.AddAsync(chatHistory);
+		await chatHistoryRepository.AddAsync(chatHistory);
 
 		// 4. Return DTO
 		return new ChatResponseDto
@@ -63,7 +52,7 @@ public sealed class ChatService : IChatService
 	public async Task<IEnumerable<ChatHistoryDto>> GetHistoryAsync()
 	{
 		// 1. Get all chat history from repository
-		var history = await _chatHistoryRepository.GetAllAsync();
+		var history = await chatHistoryRepository.GetAllAsync();
 
 		// 2. Map to DTOs (manual mapping - simple and clear)
 		return history.Select(h => new ChatHistoryDto
