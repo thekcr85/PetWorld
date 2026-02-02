@@ -28,8 +28,8 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
 	var context = scope.ServiceProvider.GetRequiredService<PetWorldDbContext>();
-	context.Database.EnsureCreated();
-	DbInitializer.SeedData(context);
+	await context.Database.EnsureCreatedAsync();
+	await DbInitializer.SeedDataAsync(context);
 }
 
 if (!app.Environment.IsDevelopment())
