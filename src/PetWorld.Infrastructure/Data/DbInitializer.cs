@@ -93,7 +93,7 @@ public static class DbInitializer
 			}
 		};
 
-		context.Products.AddRange(products);
-		context.SaveChanges();
+		await context.Products.AddRangeAsync(products);
+		await context.SaveChangesAsync();
 	}
 }
