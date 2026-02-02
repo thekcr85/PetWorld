@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using PetWorld.Domain.Entities;
 
 namespace PetWorld.Infrastructure.Data;
@@ -10,10 +11,10 @@ public static class DbInitializer
 	/// <summary>
 	/// Seeds the database with 10 products from requirements.
 	/// </summary>
-	public static void SeedData(PetWorldDbContext context)
+	public static async Task SeedDataAsync(PetWorldDbContext context)
 	{
 		// Check if products already exist
-		if (context.Products.Any())
+		if (await context.Products.AnyAsync())
 		{
 			return; // Database already seeded
 		}
