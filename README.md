@@ -41,8 +41,9 @@ Clean Architecture
 git clone https://github.com/thekcr85/PetWorld.git
 cd PetWorld
 
-# 2. Create .env file with your API key
-echo OPENAI_API_KEY=sk-your-key-here > .env
+# 2. Copy .env.example and add your API key
+cp .env.example .env
+# Edit .env and add your OpenAI API key
 
 # 3. Start
 docker compose up
@@ -68,16 +69,13 @@ docker run -d -p 3306:3306 \
   -e MYSQL_DATABASE=petworld \
   mysql:8.0
 
-# 2. Update src/PetWorld.Web/appsettings.json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Server=localhost;Database=petworld;User=root;Password=petworld123;"
-  },
-  "OpenAI": {
-    "ApiKey": "sk-your-key-here",
-    "ModelName": "gpt-4o"
-  }
-}
+# 2. Set environment variables or update appsettings.json
+# Option A: Environment variables (recommended)
+export OpenAI__ApiKey="sk-your-key-here"
+export OpenAI__ModelName="gpt-4o"
+
+# Option B: Update appsettings.json (not recommended for production)
+# Add OpenAI:ApiKey to appsettings.json
 
 # 3. Run
 cd src/PetWorld.Web
@@ -88,17 +86,32 @@ dotnet run
 
 ```
 src/
-├── PetWorld.Domain/              # 🎯 Core (Entities, Interfaces)
+├── PetWorld.Domain/              # 🎯 Core (Entities only)
+│   └── Entities/
+│       ├── Product.cs
+│       └── ChatHistory.cs
 ├── PetWorld.Application/         # 💼 Business Logic
+│   ├── Interfaces/              # Service & Repository interfaces
+│   ├── Services/
+│   ├── DTOs/
+│   └── Extensions/
 ├── PetWorld.Infrastructure/      # 🔧 Data + AI Services
+│   ├── Data/
+│   ├── Repositories/
+│   ├── Services/
+│   └── Extensions/
 └── PetWorld.Web/                 # 🎨 Blazor UI
-    └── Components/Pages/
-        ├── Home.razor           # Landing page
-        ├── Chat.razor           # AI chat interface
-        └── History.razor        # Conversation log
+    ├── Components/Pages/
+    │   ├── Home.razor           # Landing page
+    │   ├── Chat.razor           # AI chat interface
+    │   └── History.razor        # Conversation log
+    └── Extensions/
 ```
 
-**Clean Architecture** - dependencies flow inward (Web → Infra → App → Domain)
+**Clean Architecture** - dependencies flow inward:
+- Web → Infrastructure → Application → Domain
+- Interfaces in Application layer (Dependency Inversion Principle)
+- Domain contains only entities (no external dependencies)
 
 ## How Writer-Critic Works
 
@@ -134,25 +147,38 @@ User asks: "Jaka karma dla psa?"
 
 ### Environment Variables (.env)
 
+Create a `.env` file based on `.env.example`:
+
 ```bash
 OPENAI_API_KEY=sk-your-actual-api-key-here
+OPENAI_MODEL_NAME=gpt-4o
+DB_PASSWORD=petworld123
 ```
 
 ### appsettings.json
 
+Environment variables override appsettings values in Docker. For local development:
+
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Server=mysql;Database=petworld;User=root;Password=petworld123;"
+    "DefaultConnection": "Server=localhost;Database=petworld;User=root;Password=petworld123;"
   },
   "OpenAI": {
-    "ApiKey": "YOUR_OPENAI_API_KEY",
     "ModelName": "gpt-4o"
   }
 }
 ```
 
+**Note:** OpenAI API key should be provided via environment variables for security.
+
 ## NuGet Packages
+
+### PetWorld.Application
+
+```xml
+<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.0" />
+```
 
 ### PetWorld.Infrastructure
 
@@ -165,6 +191,24 @@ OPENAI_API_KEY=sk-your-actual-api-key-here
 ```
 
 **All packages are production-ready and compatible with .NET 9!**
+
+## Architecture Highlights
+
+### Clean Architecture Principles
+
+✅ **Dependency Inversion** - Interfaces in Application layer, implementations in Infrastructure  
+✅ **Separation of Concerns** - Each layer has a single responsibility  
+✅ **Extension Methods** - Service registration organized by layer  
+✅ **Environment-based Configuration** - Secrets in .env, not in appsettings.json  
+
+### Service Registration
+
+```csharp
+// Program.cs
+builder.Services.AddApplicationServices();           // Application layer services
+builder.Services.AddInfrastructureServices(configuration); // Infrastructure + Repositories + AI
+await app.InitialiseDatabaseAsync();                  // Database initialization
+```
 
 ## Docker Commands
 
