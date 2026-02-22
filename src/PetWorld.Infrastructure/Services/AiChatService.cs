@@ -2,8 +2,8 @@
 using Microsoft.Extensions.Configuration;
 using OpenAI;
 using OpenAI.Chat;
-using PetWorld.Domain.Entities;
 using PetWorld.Application.Interfaces.Services;
+using PetWorld.Domain.Entities;
 using System.Text;
 using System.Text.Json;
 
