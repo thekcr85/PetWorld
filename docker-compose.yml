@@ -3,7 +3,7 @@ services:
     image: mysql:8.0
     container_name: petworld-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: petworld123
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
       MYSQL_DATABASE: petworld
     ports:
       - "3306:3306"
@@ -19,9 +19,9 @@ services:
     ports:
       - "5000:8080"
     environment:
-      - ConnectionStrings__DefaultConnection=Server=mysql;Port=3306;Database=petworld;User=root;Password=petworld123;
+      - ConnectionStrings__DefaultConnection=Server=mysql;Port=3306;Database=petworld;User=root;Password=${DB_PASSWORD};
       - OpenAI__ApiKey=${OPENAI_API_KEY}
-      - OpenAI__ModelName=gpt-4o
+      - OpenAI__ModelName=${OPENAI_MODEL_NAME}
     depends_on:
       mysql:
         condition: service_healthy
