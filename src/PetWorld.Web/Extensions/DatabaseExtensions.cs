@@ -1,6 +1,6 @@
-﻿using PetWorld.Infrastructure.Data;
+using PetWorld.Infrastructure.Data;
 
-namespace PetWorld.Infrastructure.Extensions;
+namespace PetWorld.Web.Extensions;
 
 public static class DatabaseExtensions
 {
