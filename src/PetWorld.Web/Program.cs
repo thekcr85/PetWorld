@@ -13,12 +13,7 @@ builder.Services.AddInfrastructureServices(builder.Configuration);
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
-{
-	var context = scope.ServiceProvider.GetRequiredService<PetWorldDbContext>();
-	await context.Database.EnsureCreatedAsync();
-	await DbInitializer.SeedDataAsync(context);
-}
+await app.InitialiseDatabaseAsync();
 
 if (!app.Environment.IsDevelopment())
 {
