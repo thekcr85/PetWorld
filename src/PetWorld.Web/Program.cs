@@ -1,10 +1,6 @@
-using Microsoft.EntityFrameworkCore;
-using PetWorld.Application.Services;
-using PetWorld.Application.Interfaces.Repositories;
-using PetWorld.Application.Interfaces.Services;
+using PetWorld.Application.Extensions;
 using PetWorld.Infrastructure.Data;
-using PetWorld.Infrastructure.Repositories;
-using PetWorld.Infrastructure.Services;
+using PetWorld.Infrastructure.Extensions;
 using PetWorld.Web.Components;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,16 +8,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
 	.AddInteractiveServerComponents();
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-	?? throw new InvalidOperationException("Connection string not found.");
-
-builder.Services.AddDbContext<PetWorldDbContext>(options =>
-	options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
-
-builder.Services.AddScoped<IProductRepository, ProductRepository>();
-builder.Services.AddScoped<IChatHistoryRepository, ChatHistoryRepository>();
-builder.Services.AddScoped<IAiChatService, AiChatService>();
-builder.Services.AddScoped<IChatService, ChatService>();
+builder.Services.AddApplicationServices();
+builder.Services.AddInfrastructureServices(builder.Configuration);
 
 var app = builder.Build();
 
