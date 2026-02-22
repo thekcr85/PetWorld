@@ -1,7 +1,7 @@
 ﻿using PetWorld.Application.DTOs;
+using PetWorld.Application.Interfaces.Repositories;
+using PetWorld.Application.Interfaces.Services;
 using PetWorld.Domain.Entities;
-using PetWorld.Domain.Interfaces.Repositories;
-using PetWorld.Domain.Interfaces.Services;
 
 namespace PetWorld.Application.Services;
 
