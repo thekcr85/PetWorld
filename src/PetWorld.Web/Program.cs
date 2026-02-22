@@ -1,6 +1,7 @@
 using PetWorld.Application.Extensions;
 using PetWorld.Infrastructure.Extensions;
 using PetWorld.Web.Components;
+using PetWorld.Web.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
